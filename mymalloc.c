@@ -18,8 +18,8 @@ struct node_desc {
 	unsigned long long huge_page_bytes; // amount of free bytes in the node backed up by huge pages
 	int distance_from_local; // distance from node that made the allocation request
 	int id;
-	unsigned long long bound_bytes; // amount of process virtual memory that has been bound to this node
-	struct remote_virtual_range *vr_list;
+	//unsigned long long bound_bytes; // amount of process virtual memory that has been bound to this node
+	//struct remote_virtual_range *vr_list;
 };
 
 struct node_desc *nodes = NULL; // array that holds node descriptors
@@ -220,13 +220,15 @@ void * malloc_with_huge_pages(size_t bytes) {
 			nodemask = 1 << nodes[i].id;
 			//printf("[malloc_with_huge_pages] nodemask: %lu\n", nodemask);
 			if (mbind(start, bind_len, MPOL_PREFERRED, &nodemask, 8, 0) == 0) {
+				/*
 				if (i == 0) { // i=0 when we are on local node
-					//mem_info.num_base_pages_local += bind_len / BASE_PAGE_SIZE;
+					mem_info.num_base_pages_local += bind_len / BASE_PAGE_SIZE;
 				}
 				else { // we are on a remote node
-					//add_range_to_list(start, bind_len, nodes[i].id);
-					//mem_info.num_base_pages_remote += bind_len / BASE_PAGE_SIZE;
+					add_range_to_list(start, bind_len, nodes[i].id);
+					mem_info.num_base_pages_remote += bind_len / BASE_PAGE_SIZE;
 				}
+				*/
 
 				start += bind_len;
 				bytes_left -= bind_len;
@@ -250,10 +252,7 @@ void *malloc(size_t size)
     static void *(*mallocp)(size_t size);
     char *error;
     void *ptr = NULL;
-    //unsigned long nodemask = 1 << 1;
-    //unsigned long mod;
 
-    //fprintf(stderr, "malloc_wrapper entered\n");
     /* get address of libc malloc */
     if (!mallocp) {
 	mallocp = dlsym(RTLD_NEXT, "malloc");
@@ -262,31 +261,17 @@ void *malloc(size_t size)
 	    exit(1);
 	}
     }
-    /*
-    ptr = mallocp(size);
-    mod = (unsigned long)ptr % HUGE_PAGE_SIZE;
-    if (mod != 0) {
-	    ptr = (void *)((unsigned long)ptr - mod + HUGE_PAGE_SIZE);
-	    size = size - (HUGE_PAGE_SIZE - mod);
-    }
-    posix_memalign(&ptr, HUGE_PAGE_SIZE, size);
-    if (size > 500 * (1 << 20)) {
-       fprintf(stderr, "malloc(%ld) = %p\n", size, ptr);
-       //fprintf(stderr, "malloc: tid: %ld\n", syscall(SYS_gettid));
-       if (mbind(ptr, size, MPOL_PREFERRED, &nodemask, 8, 0) < 0) {
-          fprintf(stderr, "mbind: %s\n", strerror(errno));
-       }
-    }
-    */
+
+    /* If request size is bigger than 500MB use malloc_with_huge_pages, else don't */
     if (size > 500 * (1 << 20)) {
 	    if (local_nid == -1) {
-		fprintf(stderr, "HPP initialization\n");
+		//fprintf(stderr, "HPP initialization\n");
 		local_nid = numa_node_of_cpu(sched_getcpu());
 		num_numa_nodes = numa_max_node() + 1;
 		nodes = (struct node_desc *)mallocp(num_numa_nodes * sizeof(struct node_desc));
 		HPP_init_nodes();
 	    }
-	    fprintf(stderr, "Calling malloc_with_huge_pages\n");
+	    //fprintf(stderr, "Calling malloc_with_huge_pages\n");
 	    ptr = malloc_with_huge_pages(size);
     }
     else {

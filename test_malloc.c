@@ -3,18 +3,18 @@
 #include <stdlib.h>
 
 int main() {
-	fprintf(stderr, "1\n");
-	fprintf(stderr, "2\n");
-	void *p = malloc(10000000000);
-	fprintf(stderr, "3\n");
-	memset(p, 0, 10000000000);
+	size_t size = 20UL * (1 << 30);
+	fprintf(stderr, "Allocating 20 GB..\n");
+	void *p = malloc(size);
+	memset(p, 0, size);
+	fprintf(stderr, "Done.\n");
 	fprintf(stderr, "Press 'f' to exit: ");
 	int c;
 	while ((c=getchar()) != 'f') {
 		while ((c=getchar()) != '\n') { }
 		fprintf(stderr, "Press 'f': ");
 	}
-	printf("\n");
+	fprintf(stderr, "\n");
 	fprintf(stderr, "Exiting..\n");
 
 	return 0;
