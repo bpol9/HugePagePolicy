@@ -10,7 +10,6 @@
 #include <err.h>
 #include <fcntl.h>
 
-//#define HUGE_PAGE_SIZE (2 << 20)
 
 void usage(char *msg, FILE *out)
 {
@@ -77,8 +76,6 @@ int main(int argc, char **argv)
 	}
 
 	free_size = HUGE_PAGE_SIZE - stride;
-
-	//strides_num = bytes_total / stride;
 	huge_pages_num = bytes_total / HUGE_PAGE_SIZE;
 
 	sa.sa_flags = 0;
@@ -90,7 +87,7 @@ int main(int argc, char **argv)
 	sigemptyset(&set);
 	sigaddset(&set, SIGUSR1);
 
-	printf("Creating a single virtual memory area of %llu bytes.\n", bytes_total);
+	printf("Calling mmap for %llu bytes.\n", bytes_total);
 	printf("Number of hugepages: %llu\n", huge_pages_num);
 	printf("%lluKB to be unmapped for every 2MB\n", free_size/1024);
 	data = mmap(NULL, bytes_total, PROT_READ | PROT_WRITE,
@@ -111,11 +108,6 @@ int main(int argc, char **argv)
 	printf("\n");
 
 	void *start = (void *)((long long)data & ~(HUGE_PAGE_SIZE-1));
-	//printf("data pointer as returned by mmap: %p\n", data);
-	//printf("start pointer (huge page aligned): %p\n", start);
-	//printf("setting stride to 2MB\n");
-	//stride = 2*1024*1024;
-
 	for (i=0; i<huge_pages_num-1; i++) {
 		if (munmap(start + i*HUGE_PAGE_SIZE, free_size) < 0) {
 			perror("munmap");
