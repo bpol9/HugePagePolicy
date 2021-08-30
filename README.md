@@ -17,4 +17,12 @@ export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libdl.so /path/to/rhp.so"
 # RHP Profiler
 
 RHP profiler monitors processes that run with RHP and estimates whether their remote memory should be moved to the local node using small pages and eliminating remote accesses.
-In order to estimate that, it needs some offline stats per application that are stored in the OFFLINE_PROFILER_FILE (defined in profiler/header.h). More precisely, each line in this file is consisted of 3 columns, (1) the executable name of the application, (2) the memory overhead when all memory is mapped locally and with huge pages and (3) the total memory footprint of the application. Currently, these statistics have to manually be computed and added to the file per application. Applications that have not been offline profiled and their statistics are not included in the file are ignored by the profiler.
+In order to estimate that, it needs some offline stats per application that are stored in the OFFLINE_PROFILER_FILE (its location must be defined in profiler/header.h). More precisely, each line in this file is consisted of 3 columns, (1) the executable name of the application, (2) the main memory overhead when all memory is mapped locally and with huge pages and (3) the total memory footprint of the application. Currently, these statistics have to manually be computed and added to the file per application. An instance of the OFFLINE_PROFILER_FILE is below:
+```
+hashjoin 61 102G
+XSBench  73 117G
+train    70 31G
+STREAM   5  10G
+```
+where it is seen that STREAM, for example, spends 5% of its execution time waiting data from main memory and it needs 10G in total.
+Applications that have not been offline profiled and their statistics are not included in the file are ignored by the profiler. 
