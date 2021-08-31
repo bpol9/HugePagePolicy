@@ -2,7 +2,6 @@
 #include "header.h"
 #include "lib_perf.h"
 #include "lib_numa.h"
-//#include "lib_thp.h"
 
 
 #define max(a, b) (((a) < (b)) ? (b) : (a))
@@ -17,7 +16,7 @@ struct process *procs_profiled = NULL; // list of processes that have already be
  * Computes and stores for process proc the following
  * 1. the size of all anonymous regions
  * 2. the size of anonymous regions that are mapped with huge pages
- * 3. the resident set size (also stores the previous rss value)
+ * 3. the resident set size
  */
 static int
 update_mem_stats(struct process *proc)
@@ -262,30 +261,6 @@ handle_procs_at_init_stage()
 			prev = curr;
 			curr = curr->next;
 		}
-
-		/*
-		if (curr->skip_rss_check) {
-			curr->skip_rss_check = false;
-			prev = curr;
-			curr = curr->next;
-		}
-		else if (curr->rss[0] <= curr->rss[1]) { // RSS didn't increase, so *assume* that initilization phase is over.
-			printf("Process with pid %d finished initialization. Old RSS value: %u, New RSS value: %u. "
-			       "Moving it to procs_ready list.\n", curr->pid, curr->rss[1], curr->rss[0]);
-			// Remove the process from the list of initializing processes
-			prev->next = curr->next;
-
-			// Add current process in list of procs that are ready to be profiled
-			curr->next = procs_ready_to_prof;
-			procs_ready_to_prof = curr;
-
-			curr = prev->next;
-		}
-		else { // RSS did increase, so initialization phase is not over yet.
-			prev = curr;
-			curr = curr->next;
-		}
-		*/
 	}
 
 	// Time to check the first item of the list that was skipped for code simplicity
@@ -347,13 +322,6 @@ static void profile_forever(char *usr, int interval)
 	char line[LINELENGTH], command[LINELENGTH];
 
 	sprintf(command, "ps -o pid -u %s | sed '1d'", usr);
-	/*
-	if (init_perf_event_masks() < 0) {
-		printf("Could not initialize perf event masks. Exiting\n");
-		exit(EXIT_FAILURE);
-	}
-	*/
-
 	while (true) {
 		/* get all processes of the current user*/
 		fp = popen(command, "r");

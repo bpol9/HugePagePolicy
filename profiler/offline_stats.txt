@@ -1,0 +1,4 @@
+hashjoin 61 102G
+XSBench 73 117G
+train 70 31G
+speed_bwaves_ba 5 10G

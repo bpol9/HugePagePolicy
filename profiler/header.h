@@ -5,16 +5,12 @@
 #define FILENAMELENGTH		50
 #define LINELENGTH		2000
 #define PAGE_SIZE		4096
-/* For a process to be eligible for THP considerations,
- * it must have anon memory size of at least this value.
- * Its current value is 300MB (based on heuristics).
- */
 #define	ELIGIBILITY_THRESHOLD	      1000000
 #define	IS_CONSIDERABLE		      	  1
 #define THRESHOLD_REMOTE_MEMORY_RATIO 10
 #define RSS_DIFF_KB 5120 // 5MB
 
-#define OFFLINE_PROFILER_FILE "/home/bill/hpp-offline-profiler/local_mem_overheads.txt"
+#define OFFLINE_PROFILER_FILE "/home/bill/RHP/profiler/offline_stats.txt"
 
 /*
  * These are used as indexes to fds array-field of struct process.
@@ -28,28 +24,18 @@ enum PERF_EVENTS {
 };
 
 /*
- * skip		This is an optional field to ignore processes
- *	 		that should not be considered for THP. An example usage
- * 			can be small memory processes (e.g. < 200MB ). It can be
- * 			used to filter out background services (if any).
- *			Currently, we are seeing that some processes do not have an
- *			entry in /proc. We can't do anything about such processes at this
- *			point. However, it is still being kept aroud just in case a proc
- * 			entry appears for it later.
+ * mem_overhead_local   The main memory overhead of the process when executed 
+ * 		 	with 100% of its virtual memory mapped to the local node.
+ *			This is provided from the results of an offline exeuction.
  *
- * rss[2]   rss[0] is the last rss value retrieved for the process (current),
- *          rss[1] is the last but one rss value (previous). We keep track of
- *          these values so that we can compare them. If rss[0] <= rss[1],
- *          we assume that the initialization phase of the process is over.
+ * local_node_id  	The id of the numa node where the process is executed.
  *
- * mem_overhead_local   The memory overhead of the process when executed 
- * 					    with 100% of its virtual memory mapped to local node.
- 						This is provided from the results of an offline exeuction.
-
- * skip_rss_check   This field indicates not to check for rss changes in this
- *					process because it was just discovered.
+ * rss_kB		The current value of the resident set size of the process
+ * 			in KB. It is compared against the total memory requirements
+ * 			of the process (which are known from the offline exexution),
+ * 			to determine when the initialization phase is over.
  *
- * local_node_id  The id of the numa node where the process is executed.
+ * fds			File descriptors to read performance counters for the process.
  */
 struct process {
 	int pid;
